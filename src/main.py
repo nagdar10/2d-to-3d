@@ -187,7 +187,7 @@ def main():
         return -1
 
     image_path = sys.argv[1]
-    im = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    im = cv2.imread(f"images/{image_path}", cv2.IMREAD_COLOR)
 
     if im is None:
         print(f"Error: Could not open or find the image at {image_path}")
@@ -250,9 +250,9 @@ def main():
     cv2.imshow("Red-Cyan 3D Anaglyph", red_cyan_image)
     
     # Optional: Save the output
-    cv2.imwrite("depth_map_output.jpg", depth_map)
-    cv2.imwrite("red_cyan_anaglyph_output.jpg", red_cyan_image)
-    print("Output images 'depth_map_output.jpg' and 'red_cyan_anaglyph_output.jpg' have been saved.")
+    cv2.imwrite("output/depth_map_output.jpg", depth_map)
+    cv2.imwrite("output/red_cyan_anaglyph_output.jpg", red_cyan_image)
+    print("Output images 'output/depth_map_output.jpg' and 'output/red_cyan_anaglyph_output.jpg' have been saved.")
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
