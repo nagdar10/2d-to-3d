@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
-import sys
 import math
+import tkinter as tk
+from tkinter import filedialog
 
 class DbScan:
     """
@@ -178,16 +179,22 @@ def generate_red_cyan(image, depth_map):
 
     return anaglyph_image
 
+import tkinter as tk
+from tkinter import filedialog
+
 def main():
     """
     Main execution function.
     """
-    if len(sys.argv) != 2:
-        print("Usage: python script.py <image_path>")
-        return -1
+    root = tk.Tk()
+    root.withdraw()
+    image_path = filedialog.askopenfilename()
 
-    image_path = sys.argv[1]
-    im = cv2.imread(f"images/{image_path}", cv2.IMREAD_COLOR)
+    if not image_path:
+        print("No image selected.")
+        return
+
+    im = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
     if im is None:
         print(f"Error: Could not open or find the image at {image_path}")
