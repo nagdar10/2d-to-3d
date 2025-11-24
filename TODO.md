@@ -13,7 +13,7 @@ This file contains a list of potential improvements and features for the 2D to 3
 - [ ] **Graphical User Interface (GUI):** Create a GUI to make the application more user-friendly.
 - [x] **File Dialog:** Implement a file dialog to allow the user to select an image file instead of using a hardcoded filename.
 - [ ] **Parameter Tuning:** Add controls to the GUI to allow the user to tune the DBSCAN parameters (`eps` and `min_samples`) and other settings.
-- [ ] **Issue with closing** When you close all image windows, the program does not terminate.
+- [x] **Issue with closing** When you close all image windows, the program does not terminate.
 
 ## Algorithm Improvements
 

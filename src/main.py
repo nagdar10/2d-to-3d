@@ -261,7 +261,29 @@ def main():
     cv2.imwrite("output/red_cyan_anaglyph_output.jpg", red_cyan_image)
     print("Output images 'output/depth_map_output.jpg' and 'output/red_cyan_anaglyph_output.jpg' have been saved.")
 
-    cv2.waitKey(0)
+    print("Press 'q' or Esc to quit, or close all windows.")
+    while True:
+        # Wait for 100ms for a key press
+        key = cv2.waitKey(100) & 0xFF
+        
+        # If 'q' or Esc (27) is pressed, break
+        if key == ord('q') or key == 27:
+            break
+            
+        # Check if windows are still open
+        # getWindowProperty returns -1 if the window is closed
+        # We check one of the windows, if it's closed we assume user wants to quit
+        # Or better, check if ANY window is open. 
+        # However, OpenCV doesn't have a simple "are any windows open" function without tracking names.
+        # We know the names: "Original Image", "Generated Depth Map", "Red-Cyan 3D Anaglyph"
+        
+        prop1 = cv2.getWindowProperty("Original Image", cv2.WND_PROP_VISIBLE)
+        prop2 = cv2.getWindowProperty("Generated Depth Map", cv2.WND_PROP_VISIBLE)
+        prop3 = cv2.getWindowProperty("Red-Cyan 3D Anaglyph", cv2.WND_PROP_VISIBLE)
+
+        # If all windows are closed (visible property < 1), break
+        if prop1 < 1 and prop2 < 1 and prop3 < 1:
+            break
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
