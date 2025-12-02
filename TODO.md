@@ -6,7 +6,7 @@ This file contains a list of potential improvements and features for the 2D to 3
 
 - [ ] **3D Model Generation:** Use the generated depth map to create a 3D model, such as a point cloud or a mesh.
 - [ ] **3D Visualization:** Implement a 3D viewer to display the generated 3D model.
-- [ ] **Save/Export:** Allow the user to save the generated depth map and/or the 3D model to a file.
+- [x] **Save/Export:** Allow the user to save the generated depth map and/or the 3D model to a file.
 
 ## User Interface
 

@@ -261,7 +261,7 @@ def main():
     cv2.imwrite("output/red_cyan_anaglyph_output.jpg", red_cyan_image)
     print("Output images 'output/depth_map_output.jpg' and 'output/red_cyan_anaglyph_output.jpg' have been saved.")
 
-    print("Press 'q' or Esc to quit, or close all windows.")
+    print("Press 's' to save images, 'q' or Esc to quit, or close all windows.")
     while True:
         # Wait for 100ms for a key press
         key = cv2.waitKey(100) & 0xFF
@@ -269,6 +269,26 @@ def main():
         # If 'q' or Esc (27) is pressed, break
         if key == ord('q') or key == 27:
             break
+        
+        # If 's' is pressed, save the images
+        if key == ord('s'):
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".jpg",
+                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+                title="Save Depth Map As"
+            )
+            if file_path:
+                cv2.imwrite(file_path, depth_map)
+                print(f"Depth map saved to {file_path}")
+            
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".jpg",
+                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+                title="Save Anaglyph Image As"
+            )
+            if file_path:
+                cv2.imwrite(file_path, red_cyan_image)
+                print(f"Anaglyph image saved to {file_path}")
             
         # Check if windows are still open
         # getWindowProperty returns -1 if the window is closed
