@@ -3,6 +3,7 @@ import numpy as np
 import math
 import tkinter as tk
 from tkinter import filedialog
+import argparse
 
 class DbScan:
     """
@@ -144,6 +145,56 @@ def get_bottom_point(contour):
     """Finds the lowest point (max y-coordinate) in a contour."""
     return max(contour, key=lambda point: point[0][1])[0]
 
+class KMeansClustering:
+    """
+    K-Means clustering implementation for bounding boxes.
+    Clusters boxes based on their centroids.
+    """
+    def __init__(self, data, k):
+        """
+        Initializes K-Means clustering.
+
+        Args:
+            data (list): List of rectangles [x, y, w, h].
+            k (int): Number of clusters.
+        """
+        self.data = data
+        self.k = k
+        self.labels = []
+        self.cluster_id = -1
+
+    def run(self):
+        """
+        Executes K-Means clustering.
+        """
+        if not self.data:
+            return []
+
+        # Convert rectangles to centroids for K-Means
+        points = []
+        for rect in self.data:
+            x, y, w, h = rect
+            cx = x + w / 2.0
+            cy = y + h / 2.0
+            points.append([cx, cy])
+        
+        points_np = np.array(points, dtype=np.float32)
+        
+        # Ensure k is not greater than the number of samples
+        real_k = min(len(self.data), self.k)
+        if real_k < 1:
+            return [-1] * len(self.data)
+
+        # Define criteria = ( type, max_iter = 10, epsilon = 1.0 )
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        
+        flags = cv2.KMEANS_RANDOM_CENTERS
+        compactness, labels, centers = cv2.kmeans(points_np, real_k, None, criteria, 10, flags)
+        
+        self.labels = labels.flatten().tolist()
+        self.cluster_id = real_k - 1
+        return self.labels
+
 def generate_red_cyan(image, depth_map):
     """
     Generates a red-cyan 3D anaglyph image from an image and its depth map.
@@ -179,6 +230,13 @@ def generate_red_cyan(image, depth_map):
 
     return anaglyph_image
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="2D to 3D Image Converter")
+    parser.add_argument('--algo', choices=['dbscan', 'kmeans'], default='dbscan', help='Clustering algorithm to use')
+    parser.add_argument('--k', type=int, default=3, help='Number of clusters for K-Means')
+    parser.add_argument('--eps-factor', type=float, default=0.02, help='Epsilon factor for DBSCAN (proportion of image size)')
+    return parser.parse_args()
+
 import tkinter as tk
 from tkinter import filedialog
 
@@ -186,6 +244,8 @@ def main():
     """
     Main execution function.
     """
+    args = parse_arguments()
+
     root = tk.Tk()
     root.withdraw()
     image_path = filedialog.askopenfilename()
@@ -208,12 +268,23 @@ def main():
     # 2. Get the bounding box for each contour
     boxes = [cv2.boundingRect(c) for c in contours]
 
-    # 3. Cluster the bounding boxes using DBSCAN to group parts of the same object
-    # The distance threshold is proportional to the image size.
-    dbscan_distance = ((height + width) / 2) * 0.02
-    dbscan = DbScan(boxes, dbscan_distance, 2)
-    labels = dbscan.run()
-    num_clusters = dbscan.cluster_id + 1
+    # 3. Cluster the bounding boxes
+    labels = []
+    num_clusters = 0
+
+    if args.algo == 'kmeans':
+        print(f"Using K-Means clustering with k={args.k}")
+        kmeans = KMeansClustering(boxes, args.k)
+        labels = kmeans.run()
+        num_clusters = kmeans.cluster_id + 1
+    else:
+        # Default to DBSCAN
+        # The distance threshold is proportional to the image size.
+        dbscan_distance = ((height + width) / 2) * args.eps_factor
+        print(f"Using DBSCAN clustering with eps={dbscan_distance:.2f} (factor={args.eps_factor})")
+        dbscan = DbScan(boxes, dbscan_distance, 2)
+        labels = dbscan.run()
+        num_clusters = dbscan.cluster_id + 1
 
     # 4. Create a background with a vertical linear gradient. This will serve as our depth map.
     # Objects at the top will be "further" (darker), and objects at the bottom

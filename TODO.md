@@ -2,6 +2,11 @@
 
 This file contains a list of potential improvements and features for the 2D to 3D conversion project.
 
+## Code improvements
+
+- [ ] **Tests:** Add e2e or some kind of tests to compare or score the results.
+- [x] **Code documentation:** Improve readme with run instructions and details
+
 ## Core Functionality
 
 - [ ] **3D Model Generation:** Use the generated depth map to create a 3D model, such as a point cloud or a mesh.
@@ -17,6 +22,6 @@ This file contains a list of potential improvements and features for the 2D to 3
 
 ## Algorithm Improvements
 
-- [ ] **Alternative Clustering Algorithms:** Explore other clustering algorithms (e.g., K-Means, Mean Shift) to see if they produce better results.
+- [x] **Alternative Clustering Algorithms:** Implemented K-Means clustering. (Original: Explore other clustering algorithms (e.g., K-Means, Mean Shift) to see if they produce better results.)
 - [ ] **Image Preprocessing:** Add more advanced image preprocessing steps to improve the quality of the depth map (e.g., noise reduction, edge detection).
 - [ ] **Refine Depth Map Generation:** Improve the logic for assigning depth values to clusters to create a more realistic depth map.
