@@ -232,6 +232,8 @@ def generate_red_cyan(image, depth_map):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="2D to 3D Image Converter")
+    parser.add_argument('--image_path', type=str, help='Path to the input image file')
+    parser.add_argument('--test_mode', action='store_true', help='Run in test mode, disabling GUI elements')
     parser.add_argument('--algo', choices=['dbscan', 'kmeans'], default='dbscan', help='Clustering algorithm to use')
     parser.add_argument('--k', type=int, default=3, help='Number of clusters for K-Means')
     parser.add_argument('--eps-factor', type=float, default=0.02, help='Epsilon factor for DBSCAN (proportion of image size)')
@@ -246,9 +248,12 @@ def main():
     """
     args = parse_arguments()
 
-    root = tk.Tk()
-    root.withdraw()
-    image_path = filedialog.askopenfilename()
+    if args.image_path:
+        image_path = args.image_path
+    else:
+        root = tk.Tk()
+        root.withdraw()
+        image_path = filedialog.askopenfilename()
 
     if not image_path:
         print("No image selected.")
@@ -322,60 +327,61 @@ def main():
     # 7. Generate the red-cyan anaglyph image
     red_cyan_image = generate_red_cyan(im, depth_map)
 
-    # 8. Display the results
-    cv2.imshow("Original Image", im)
-    cv2.imshow("Generated Depth Map", depth_map)
-    cv2.imshow("Red-Cyan 3D Anaglyph", red_cyan_image)
-    
     # Optional: Save the output
     cv2.imwrite("output/depth_map_output.jpg", depth_map)
     cv2.imwrite("output/red_cyan_anaglyph_output.jpg", red_cyan_image)
     print("Output images 'output/depth_map_output.jpg' and 'output/red_cyan_anaglyph_output.jpg' have been saved.")
 
-    print("Press 's' to save images, 'q' or Esc to quit, or close all windows.")
-    while True:
-        # Wait for 100ms for a key press
-        key = cv2.waitKey(100) & 0xFF
+    if not args.test_mode:
+        # 8. Display the results
+        cv2.imshow("Original Image", im)
+        cv2.imshow("Generated Depth Map", depth_map)
+        cv2.imshow("Red-Cyan 3D Anaglyph", red_cyan_image)
         
-        # If 'q' or Esc (27) is pressed, break
-        if key == ord('q') or key == 27:
-            break
-        
-        # If 's' is pressed, save the images
-        if key == ord('s'):
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".jpg",
-                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
-                title="Save Depth Map As"
-            )
-            if file_path:
-                cv2.imwrite(file_path, depth_map)
-                print(f"Depth map saved to {file_path}")
+        print("Press 's' to save images, 'q' or Esc to quit, or close all windows.")
+        while True:
+            # Wait for 100ms for a key press
+            key = cv2.waitKey(100) & 0xFF
             
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".jpg",
-                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
-                title="Save Anaglyph Image As"
-            )
-            if file_path:
-                cv2.imwrite(file_path, red_cyan_image)
-                print(f"Anaglyph image saved to {file_path}")
+            # If 'q' or Esc (27) is pressed, break
+            if key == ord('q') or key == 27:
+                break
             
-        # Check if windows are still open
-        # getWindowProperty returns -1 if the window is closed
-        # We check one of the windows, if it's closed we assume user wants to quit
-        # Or better, check if ANY window is open. 
-        # However, OpenCV doesn't have a simple "are any windows open" function without tracking names.
-        # We know the names: "Original Image", "Generated Depth Map", "Red-Cyan 3D Anaglyph"
-        
-        prop1 = cv2.getWindowProperty("Original Image", cv2.WND_PROP_VISIBLE)
-        prop2 = cv2.getWindowProperty("Generated Depth Map", cv2.WND_PROP_VISIBLE)
-        prop3 = cv2.getWindowProperty("Red-Cyan 3D Anaglyph", cv2.WND_PROP_VISIBLE)
+            # If 's' is pressed, save the images
+            if key == ord('s'):
+                file_path = filedialog.asksaveasfilename(
+                    defaultextension=".jpg",
+                    filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+                    title="Save Depth Map As"
+                )
+                if file_path:
+                    cv2.imwrite(file_path, depth_map)
+                    print(f"Depth map saved to {file_path}")
+                
+                file_path = filedialog.asksaveasfilename(
+                    defaultextension=".jpg",
+                    filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+                    title="Save Anaglyph Image As"
+                )
+                if file_path:
+                    cv2.imwrite(file_path, red_cyan_image)
+                    print(f"Anaglyph image saved to {file_path}")
+                
+            # Check if windows are still open
+            # getWindowProperty returns -1 if the window is closed
+            # We check one of the windows, if it's closed we assume user wants to quit
+            # Or better, check if ANY window is open. 
+            # However, OpenCV doesn't have a simple "are any windows open" function without tracking names.
+            # We know the names: "Original Image", "Generated Depth Map", "Red-Cyan 3D Anaglyph"
+            
+            prop1 = cv2.getWindowProperty("Original Image", cv2.WND_PROP_VISIBLE)
+            prop2 = cv2.getWindowProperty("Generated Depth Map", cv2.WND_PROP_VISIBLE)
+            prop3 = cv2.getWindowProperty("Red-Cyan 3D Anaglyph", cv2.WND_PROP_VISIBLE)
 
-        # If all windows are closed (visible property < 1), break
-        if prop1 < 1 and prop2 < 1 and prop3 < 1:
-            break
-    cv2.destroyAllWindows()
+            # If all windows are closed (visible property < 1), break
+            if prop1 < 1 and prop2 < 1 and prop3 < 1:
+                break
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
