@@ -1,254 +1,16 @@
 import cv2
 import numpy as np
-import math
-import tkinter as tk
-from tkinter import filedialog
-import argparse
-
-class DbScan:
-    """
-    A Python implementation of the DBSCAN clustering algorithm tailored for clustering
-    bounding boxes (cv2.Rect). It groups rectangles that are close to each other.
-    """
-    def __init__(self, data, eps, min_pts):
-        """
-        Initializes the DBSCAN algorithm.
-
-        Args:
-            data (list): A list of rectangles [x, y, w, h] to cluster.
-            eps (float): The maximum distance between two samples for one to be 
-                         considered as in the neighborhood of the other.
-            min_pts (int): The number of samples in a neighborhood for a point 
-                           to be considered as a core point.
-        """
-        self.data = data
-        self.eps = eps
-        self.min_pts = min_pts
-        self.labels = [-99] * len(data)  # -99: unvisited, -1: noise
-        self.cluster_id = -1
-        # Memoization table for distances to avoid re-computation
-        self.dist_cache = np.full((len(data), len(data)), -1.0)
-
-    def run(self):
-        """
-        Executes the DBSCAN clustering algorithm.
-        """
-        for i in range(len(self.data)):
-            if not self.is_visited(i):
-                neighbors = self.region_query(i)
-                if len(neighbors) < self.min_pts:
-                    self.labels[i] = -1  # Mark as noise
-                else:
-                    self.cluster_id += 1
-                    self.expand_cluster(i, neighbors)
-        return self.labels
-
-    def expand_cluster(self, p_index, neighbors):
-        """
-        Expands a cluster from a core point.
-
-        Args:
-            p_index (int): The index of the core point.
-            neighbors (list): The list of neighbors of the core point.
-        """
-        self.labels[p_index] = self.cluster_id
-        i = 0
-        while i < len(neighbors):
-            neighbor_index = neighbors[i]
-            if not self.is_visited(neighbor_index):
-                self.labels[neighbor_index] = self.cluster_id
-                new_neighbors = self.region_query(neighbor_index)
-                if len(new_neighbors) >= self.min_pts:
-                    # Add new neighbors to the list to be processed
-                    neighbors.extend(n for n in new_neighbors if n not in neighbors)
-            i += 1
-
-    def is_visited(self, index):
-        """Checks if a point has been visited (i.e., assigned a cluster or noise)."""
-        return self.labels[index] != -99
-
-    def region_query(self, p_index):
-        """
-        Finds all points within the epsilon distance of a given point.
-
-        Args:
-            p_index (int): The index of the point to query around.
-
-        Returns:
-            list: A list of indices of neighboring points.
-        """
-        neighbors = []
-        for i in range(len(self.data)):
-            if self.distance_func(p_index, i) <= self.eps:
-                neighbors.append(i)
-        return neighbors
-
-    def distance_func(self, i, j):
-        """
-        Calculates the minimum distance between the corners of two rectangles.
-        Uses a cache to store and retrieve already computed distances.
-        """
-        if self.dist_cache[i, j] != -1:
-            return self.dist_cache[i, j]
-        if i == j:
-            self.dist_cache[i, j] = 0.0
-            return 0.0
-
-        rect_a = self.data[i]
-        rect_b = self.data[j]
-
-        corners_a = [
-            (rect_a[0], rect_a[1]),
-            (rect_a[0] + rect_a[2], rect_a[1]),
-            (rect_a[0], rect_a[1] + rect_a[3]),
-            (rect_a[0] + rect_a[2], rect_a[1] + rect_a[3]),
-        ]
-        corners_b = [
-            (rect_b[0], rect_b[1]),
-            (rect_b[0] + rect_b[2], rect_b[1]),
-            (rect_b[0], rect_b[1] + rect_b[3]),
-            (rect_b[0] + rect_b[2], rect_b[1] + rect_b[3]),
-        ]
-
-        min_dist = float('inf')
-        for p1 in corners_a:
-            for p2 in corners_b:
-                dist = math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
-                if dist < min_dist:
-                    min_dist = dist
-        
-        self.dist_cache[i, j] = min_dist
-        self.dist_cache[j, i] = min_dist
-        return min_dist
-
-def get_distinct_contours(image, canny_thresh1=100, canny_thresh2=200, blur_size=3):
-    """
-    Pre-processes an image to find distinct external contours.
-
-    Args:
-        image (np.array): The input image.
-        canny_thresh1 (int): First threshold for the Canny edge detector.
-        canny_thresh2 (int): Second threshold for the Canny edge detector.
-        blur_size (int): The kernel size for the Gaussian blur.
-
-    Returns:
-        tuple: A tuple containing the contours and hierarchy.
-    """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.blur(gray, (blur_size, blur_size))
-    dilated = cv2.dilate(blurred, None)
-    canny_output = cv2.Canny(dilated, canny_thresh1, canny_thresh2)
-    contours, hierarchy = cv2.findContours(canny_output, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    return contours, hierarchy
-
-def get_bottom_point(contour):
-    """Finds the lowest point (max y-coordinate) in a contour."""
-    return max(contour, key=lambda point: point[0][1])[0]
-
-class KMeansClustering:
-    """
-    K-Means clustering implementation for bounding boxes.
-    Clusters boxes based on their centroids.
-    """
-    def __init__(self, data, k):
-        """
-        Initializes K-Means clustering.
-
-        Args:
-            data (list): List of rectangles [x, y, w, h].
-            k (int): Number of clusters.
-        """
-        self.data = data
-        self.k = k
-        self.labels = []
-        self.cluster_id = -1
-
-    def run(self):
-        """
-        Executes K-Means clustering.
-        """
-        if not self.data:
-            return []
-
-        # Convert rectangles to centroids for K-Means
-        points = []
-        for rect in self.data:
-            x, y, w, h = rect
-            cx = x + w / 2.0
-            cy = y + h / 2.0
-            points.append([cx, cy])
-        
-        points_np = np.array(points, dtype=np.float32)
-        
-        # Ensure k is not greater than the number of samples
-        real_k = min(len(self.data), self.k)
-        if real_k < 1:
-            return [-1] * len(self.data)
-
-        # Define criteria = ( type, max_iter = 10, epsilon = 1.0 )
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-        
-        flags = cv2.KMEANS_RANDOM_CENTERS
-        compactness, labels, centers = cv2.kmeans(points_np, real_k, None, criteria, 10, flags)
-        
-        self.labels = labels.flatten().tolist()
-        self.cluster_id = real_k - 1
-        return self.labels
-
-def generate_red_cyan(image, depth_map):
-    """
-    Generates a red-cyan 3D anaglyph image from an image and its depth map.
-
-    Args:
-        image (np.array): The original color image.
-        depth_map (np.array): A grayscale depth map (darker is further).
-
-    Returns:
-        np.array: The resulting red-cyan anaglyph image.
-    """
-    # Start with a copy of the original image
-    anaglyph_image = image.copy()
-    rows, cols, _ = image.shape
-
-    # Shift the blue and green channels to the right based on the depth map
-    for i in range(rows):
-        for j in range(cols):
-            # Calculate pixel shift amount (m) based on depth
-            depth_val = depth_map[i, j]
-            m = int((15 * depth_val) / 255)
-            
-            if j < cols - m:
-                # For the current pixel (i, j), get the blue and green values
-                # from a pixel to the right (i, j + m).
-                # This creates the cyan channel for the right eye's view.
-                blue_val = image[i, j + m, 0]
-                green_val = image[i, j + m, 1]
-                anaglyph_image[i, j, 0] = blue_val
-                anaglyph_image[i, j, 1] = green_val
-                # The red channel at (i, j) remains unchanged, representing
-                # the left eye's view.
-
-    return anaglyph_image
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="2D to 3D Image Converter")
-    parser.add_argument('--algo', choices=['dbscan', 'kmeans'], default='dbscan', help='Clustering algorithm to use')
-    parser.add_argument('--k', type=int, default=3, help='Number of clusters for K-Means')
-    parser.add_argument('--eps-factor', type=float, default=0.02, help='Epsilon factor for DBSCAN (proportion of image size)')
-    return parser.parse_args()
-
-import tkinter as tk
-from tkinter import filedialog
+from clustering import DbScan, KMeansClustering
+from depth_map import get_distinct_contours, generate_depth_map
+from anaglyph import generate_red_cyan
+import ui
 
 def main():
     """
     Main execution function.
     """
-    args = parse_arguments()
-
-    root = tk.Tk()
-    root.withdraw()
-    image_path = filedialog.askopenfilename()
+    args = ui.parse_arguments()
+    image_path = ui.select_image_file()
 
     if not image_path:
         print("No image selected.")
@@ -286,46 +48,17 @@ def main():
         labels = dbscan.run()
         num_clusters = dbscan.cluster_id + 1
 
-    # 4. Create a background with a vertical linear gradient. This will serve as our depth map.
-    # Objects at the top will be "further" (darker), and objects at the bottom
-    # will be "closer" (brighter).
-    gradient_map = np.zeros((height, width), dtype=np.uint8)
-    for r in range(height):
-        # Create a gradient from 32 to 223 (191+32)
-        color_val = int((191 * r) / height) + 32
-        gradient_map[r, :] = color_val
-
-    # 5. Merge contours that belong to the same cluster
-    merged_contours = [[] for _ in range(num_clusters)]
-    for i, label in enumerate(labels):
-        if label != -1:  # Ignore noise
-            merged_contours[label].extend(contours[i])
-    
-    # Filter out empty cluster lists
-    merged_contours = [np.array(mc) for mc in merged_contours if mc]
-
-    # 6. Create the final depth map by drawing the objects onto the gradient
-    depth_map = gradient_map.copy()
-    for i, contour in enumerate(merged_contours):
-        if len(contour) > 0:
-            # Determine the object's "color" (depth) by finding its lowest point
-            # and sampling the color from the gradient map at that location.
-            bottom_point = get_bottom_point(contour)
-            # Ensure the point is within bounds
-            y = min(bottom_point[1], height - 1)
-            depth_color = int(gradient_map[y, 0])
-            
-            # Draw the convex hull of the merged contour onto the depth map
-            hull = cv2.convexHull(contour)
-            cv2.drawContours(depth_map, [hull], -1, (depth_color,), thickness=cv2.FILLED)
+    # 4-6. Generate Depth Map
+    depth_map = generate_depth_map(contours, labels, num_clusters, width, height)
 
     # 7. Generate the red-cyan anaglyph image
     red_cyan_image = generate_red_cyan(im, depth_map)
 
     # 8. Display the results
-    cv2.imshow("Original Image", im)
-    cv2.imshow("Generated Depth Map", depth_map)
-    cv2.imshow("Red-Cyan 3D Anaglyph", red_cyan_image)
+    window_names = ["Original Image", "Generated Depth Map", "Red-Cyan 3D Anaglyph"]
+    cv2.imshow(window_names[0], im)
+    cv2.imshow(window_names[1], depth_map)
+    cv2.imshow(window_names[2], red_cyan_image)
     
     # Optional: Save the output
     cv2.imwrite("output/depth_map_output.jpg", depth_map)
@@ -343,38 +76,12 @@ def main():
         
         # If 's' is pressed, save the images
         if key == ord('s'):
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".jpg",
-                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
-                title="Save Depth Map As"
-            )
-            if file_path:
-                cv2.imwrite(file_path, depth_map)
-                print(f"Depth map saved to {file_path}")
-            
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".jpg",
-                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
-                title="Save Anaglyph Image As"
-            )
-            if file_path:
-                cv2.imwrite(file_path, red_cyan_image)
-                print(f"Anaglyph image saved to {file_path}")
+            ui.save_images(depth_map, red_cyan_image)
             
         # Check if windows are still open
-        # getWindowProperty returns -1 if the window is closed
-        # We check one of the windows, if it's closed we assume user wants to quit
-        # Or better, check if ANY window is open. 
-        # However, OpenCV doesn't have a simple "are any windows open" function without tracking names.
-        # We know the names: "Original Image", "Generated Depth Map", "Red-Cyan 3D Anaglyph"
-        
-        prop1 = cv2.getWindowProperty("Original Image", cv2.WND_PROP_VISIBLE)
-        prop2 = cv2.getWindowProperty("Generated Depth Map", cv2.WND_PROP_VISIBLE)
-        prop3 = cv2.getWindowProperty("Red-Cyan 3D Anaglyph", cv2.WND_PROP_VISIBLE)
-
-        # If all windows are closed (visible property < 1), break
-        if prop1 < 1 and prop2 < 1 and prop3 < 1:
+        if not ui.check_windows_open(window_names):
             break
+            
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
