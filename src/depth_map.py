@@ -1,0 +1,66 @@
+import cv2
+import numpy as np
+
+def get_distinct_contours(image, canny_thresh1=100, canny_thresh2=200, blur_size=3):
+    """
+    Pre-processes an image to find distinct external contours.
+
+    Args:
+        image (np.array): The input image.
+        canny_thresh1 (int): First threshold for the Canny edge detector.
+        canny_thresh2 (int): Second threshold for the Canny edge detector.
+        blur_size (int): The kernel size for the Gaussian blur.
+
+    Returns:
+        tuple: A tuple containing the contours and hierarchy.
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.blur(gray, (blur_size, blur_size))
+    dilated = cv2.dilate(blurred, None)
+    canny_output = cv2.Canny(dilated, canny_thresh1, canny_thresh2)
+    contours, hierarchy = cv2.findContours(canny_output, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return contours, hierarchy
+
+def get_bottom_point(contour):
+    """Finds the lowest point (max y-coordinate) in a contour."""
+    return max(contour, key=lambda point: point[0][1])[0]
+
+def generate_depth_map(contours, labels, num_clusters, width, height):
+    """
+    Generates a depth map by clustering contours and assigning depth based on vertical position.
+    """
+    # Create a background with a vertical linear gradient. This will serve as our depth map.
+    # Objects at the top will be "further" (darker), and objects at the bottom
+    # will be "closer" (brighter).
+    gradient_map = np.zeros((height, width), dtype=np.uint8)
+    for r in range(height):
+        # Create a gradient from 32 to 223 (191+32)
+        color_val = int((191 * r) / height) + 32
+        gradient_map[r, :] = color_val
+
+    # Merge contours that belong to the same cluster
+    merged_contours = [[] for _ in range(num_clusters)]
+    for i, label in enumerate(labels):
+        if label != -1:  # Ignore noise
+            merged_contours[label].extend(contours[i])
+    
+    # Filter out empty cluster lists. Note: This creates a list of arrays.
+    # We keep them as arrays for convHull.
+    merged_contours = [np.array(mc) for mc in merged_contours if mc]
+
+    # Create the final depth map by drawing the objects onto the gradient
+    depth_map = gradient_map.copy()
+    for i, contour in enumerate(merged_contours):
+        if len(contour) > 0:
+            # Determine the object's "color" (depth) by finding its lowest point
+            # and sampling the color from the gradient map at that location.
+            bottom_point = get_bottom_point(contour)
+            # Ensure the point is within bounds
+            y = min(bottom_point[1], height - 1)
+            depth_color = int(gradient_map[y, 0])
+            
+            # Draw the convex hull of the merged contour onto the depth map
+            hull = cv2.convexHull(contour)
+            cv2.drawContours(depth_map, [hull], -1, (depth_color,), thickness=cv2.FILLED)
+
+    return depth_map
