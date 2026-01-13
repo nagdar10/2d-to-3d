@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
+from config import cfg
 
-def get_distinct_contours(image, canny_thresh1=100, canny_thresh2=200, blur_size=3):
+def get_distinct_contours(image, canny_thresh1=None, canny_thresh2=None, blur_size=None):
     """
     Pre-processes an image to find distinct external contours.
 
@@ -14,6 +15,10 @@ def get_distinct_contours(image, canny_thresh1=100, canny_thresh2=200, blur_size
     Returns:
         tuple: A tuple containing the contours and hierarchy.
     """
+    if canny_thresh1 is None: canny_thresh1 = cfg.get("edge_detection", "canny_thresh1")
+    if canny_thresh2 is None: canny_thresh2 = cfg.get("edge_detection", "canny_thresh2")
+    if blur_size is None: blur_size = cfg.get("edge_detection", "blur_size")
+    
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.blur(gray, (blur_size, blur_size))
     dilated = cv2.dilate(blurred, None)
@@ -33,9 +38,14 @@ def generate_depth_map(contours, labels, num_clusters, width, height):
     # Objects at the top will be "further" (darker), and objects at the bottom
     # will be "closer" (brighter).
     gradient_map = np.zeros((height, width), dtype=np.uint8)
+    
+    g_min = cfg.get("depth_map", "gradient_min")
+    g_max = cfg.get("depth_map", "gradient_max")
+    g_diff = g_max - g_min
+    
     for r in range(height):
-        # Create a gradient from 32 to 223 (191+32)
-        color_val = int((191 * r) / height) + 32
+        # Create a gradient from g_min to g_max
+        color_val = int((g_diff * r) / height) + g_min
         gradient_map[r, :] = color_val
 
     # Merge contours that belong to the same cluster

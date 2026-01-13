@@ -4,6 +4,7 @@ from clustering import DbScan, KMeansClustering
 from depth_map import get_distinct_contours, generate_depth_map
 from anaglyph import generate_red_cyan
 import ui
+from config import cfg
 
 def main():
     """
@@ -49,7 +50,9 @@ def main():
         # The distance threshold is proportional to the image size.
         dbscan_distance = ((height + width) / 2) * args.eps_factor
         print(f"Using DBSCAN clustering with eps={dbscan_distance:.2f} (factor={args.eps_factor})")
-        dbscan = DbScan(boxes, dbscan_distance, 2)
+        
+        min_pts = cfg.get("clustering", "dbscan_min_pts")
+        dbscan = DbScan(boxes, dbscan_distance, min_pts)
         labels = dbscan.run()
         num_clusters = dbscan.cluster_id + 1
 
@@ -60,9 +63,12 @@ def main():
     red_cyan_image = generate_red_cyan(im, depth_map)
 
     # Output defaults
-    cv2.imwrite("output/depth_map_output.jpg", depth_map)
-    cv2.imwrite("output/red_cyan_anaglyph_output.jpg", red_cyan_image)
-    print("Output images 'output/depth_map_output.jpg' and 'output/red_cyan_anaglyph_output.jpg' have been saved.")
+    depth_out = cfg.get("output", "default_depth_map_filename")
+    anaglyph_out = cfg.get("output", "default_anaglyph_filename")
+    
+    cv2.imwrite(depth_out, depth_map)
+    cv2.imwrite(anaglyph_out, red_cyan_image)
+    print(f"Output images '{depth_out}' and '{anaglyph_out}' have been saved.")
 
     # 8. Display the results if not in test mode
     if not args.test_mode:
@@ -72,9 +78,10 @@ def main():
         cv2.imshow(window_names[2], red_cyan_image)
         
         print("Press 's' to save images, 'q' or Esc to quit, or close all windows.")
+        refresh_rate = cfg.get("output", "window_refresh_rate_ms")
         while True:
-            # Wait for 100ms for a key press
-            key = cv2.waitKey(100) & 0xFF
+            # Wait for key press
+            key = cv2.waitKey(refresh_rate) & 0xFF
             
             # If 'q' or Esc (27) is pressed, break
             if key == ord('q') or key == 27:

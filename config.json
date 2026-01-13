@@ -1,0 +1,28 @@
+{
+    "clustering": {
+        "algorithm": "dbscan",
+        "kmeans_k": 3,
+        "dbscan_eps_factor": 0.02,
+        "dbscan_min_pts": 2,
+        "kmeans_max_iter": 10,
+        "kmeans_epsilon": 1.0,
+        "kmeans_attempts": 10
+    },
+    "edge_detection": {
+        "canny_thresh1": 100,
+        "canny_thresh2": 200,
+        "blur_size": 3
+    },
+    "depth_map": {
+        "gradient_min": 32,
+        "gradient_max": 223
+    },
+    "anaglyph": {
+        "shift_factor": 15
+    },
+    "output": {
+        "default_depth_map_filename": "output/depth_map_output.jpg",
+        "default_anaglyph_filename": "output/red_cyan_anaglyph_output.jpg",
+        "window_refresh_rate_ms": 100
+    }
+}

@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import cv2
+from config import cfg
 
 class DbScan:
     """
@@ -159,10 +160,14 @@ class KMeansClustering:
             return [-1] * len(self.data)
 
         # Define criteria = ( type, max_iter = 10, epsilon = 1.0 )
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        max_iter = cfg.get("clustering", "kmeans_max_iter")
+        epsilon = cfg.get("clustering", "kmeans_epsilon")
+        attempts = cfg.get("clustering", "kmeans_attempts")
+        
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, max_iter, epsilon)
         
         flags = cv2.KMEANS_RANDOM_CENTERS
-        compactness, labels, centers = cv2.kmeans(points_np, real_k, None, criteria, 10, flags)
+        compactness, labels, centers = cv2.kmeans(points_np, real_k, None, criteria, attempts, flags)
         
         self.labels = labels.flatten().tolist()
         self.cluster_id = real_k - 1

@@ -2,15 +2,18 @@ import argparse
 import tkinter as tk
 from tkinter import filedialog
 import cv2
+from config import cfg
 
 def parse_arguments():
     """
     Parses command-line arguments.
     """
+    defaults = cfg.get("clustering")
+    
     parser = argparse.ArgumentParser(description="2D to 3D Image Converter")
-    parser.add_argument('--algo', choices=['dbscan', 'kmeans'], default='dbscan', help='Clustering algorithm to use')
-    parser.add_argument('--k', type=int, default=3, help='Number of clusters for K-Means')
-    parser.add_argument('--eps-factor', type=float, default=0.02, help='Epsilon factor for DBSCAN (proportion of image size)')
+    parser.add_argument('--algo', choices=['dbscan', 'kmeans'], default=defaults['algorithm'], help='Clustering algorithm to use')
+    parser.add_argument('--k', type=int, default=defaults['kmeans_k'], help='Number of clusters for K-Means')
+    parser.add_argument('--eps-factor', type=float, default=defaults['dbscan_eps_factor'], help='Epsilon factor for DBSCAN (proportion of image size)')
     parser.add_argument('--image_path', type=str, help='Path to the input image file')
     parser.add_argument('--test_mode', action='store_true', help='Run in test mode, disabling GUI elements')
     return parser.parse_args()

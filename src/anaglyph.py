@@ -1,3 +1,4 @@
+from config import cfg
 
 def generate_red_cyan(image, depth_map):
     """
@@ -14,12 +15,14 @@ def generate_red_cyan(image, depth_map):
     anaglyph_image = image.copy()
     rows, cols, _ = image.shape
 
+    shift = cfg.get("anaglyph", "shift_factor")
+
     # Shift the blue and green channels to the right based on the depth map
     for i in range(rows):
         for j in range(cols):
             # Calculate pixel shift amount (m) based on depth
             depth_val = depth_map[i, j]
-            m = int((15 * int(depth_val)) / 255)
+            m = int((shift * int(depth_val)) / 255)
             
             if j < cols - m:
                 # For the current pixel (i, j), get the blue and green values

@@ -9,7 +9,7 @@ This file contains a list of potential improvements and features for the 2D to 3
 - [x] **Code modularization:** Split main.py into separate modules (clustering.py, depth_map.py, anaglyph.py, ui.py)
 - [ ] **Type hints:** Add proper type annotations throughout the codebase
 - [ ] **Error handling:** Add try-catch blocks for file operations and image processing
-- [ ] **Configuration management:** Create a config file for default parameters
+- [x] **Configuration management:** Create a config file for default parameters
 - [ ] **Unit tests:** Test clustering algorithms and depth map generation functions
 - [ ] **Integration tests:** Test end-to-end workflow with sample images
 - [ ] **Performance benchmarks:** Measure processing time for different image sizes
