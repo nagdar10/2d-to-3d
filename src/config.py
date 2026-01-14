@@ -1,8 +1,9 @@
 import json
 import os
+from typing import Dict, Any, Optional
 
 # Default configuration dictionary
-DEFAULT_CONFIG = {
+DEFAULT_CONFIG: Dict[str, Any] = {
     "clustering": {
         "algorithm": "dbscan",
         "kmeans_k": 3,
@@ -32,11 +33,11 @@ DEFAULT_CONFIG = {
 }
 
 class Config:
-    def __init__(self, config_path="config.json"):
-        self.config = DEFAULT_CONFIG
+    def __init__(self, config_path: str = "config.json"):
+        self.config: Dict[str, Any] = DEFAULT_CONFIG
         self.load_config(config_path)
 
-    def load_config(self, path):
+    def load_config(self, path: str) -> None:
         """Loads configuration from a JSON file, overriding defaults."""
         if os.path.exists(path):
             try:
@@ -50,7 +51,7 @@ class Config:
         else:
             print(f"Config file {path} not found. Using defaults.")
 
-    def _update_recursive(self, original, update):
+    def _update_recursive(self, original: Dict[str, Any], update: Dict[str, Any]) -> None:
         """Recursively updates a dictionary."""
         for key, value in update.items():
             if isinstance(value, dict) and key in original and isinstance(original[key], dict):
@@ -58,7 +59,7 @@ class Config:
             else:
                 original[key] = value
 
-    def get(self, section, key=None):
+    def get(self, section: str, key: Optional[str] = None) -> Any:
         """Retrieves a configuration value."""
         if section not in self.config:
             return None

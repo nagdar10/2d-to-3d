@@ -1,4 +1,4 @@
-.PHONY: start install clean
+.PHONY: start install clean test
 
 # Activate virtual environment and run the application
 start:
@@ -17,3 +17,8 @@ clean:
 	@echo "Removing virtual environment..."
 	@rm -rf .venv
 	@echo "Virtual environment removed!"
+
+# Run tests
+test:
+	@echo "Running tests..."
+	@. .venv/bin/activate && python src/test_main.py

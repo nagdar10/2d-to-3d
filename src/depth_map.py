@@ -1,8 +1,12 @@
 import cv2
 import numpy as np
+from typing import List, Tuple, Optional
 from config import cfg
 
-def get_distinct_contours(image, canny_thresh1=None, canny_thresh2=None, blur_size=None):
+def get_distinct_contours(image: np.ndarray, 
+                          canny_thresh1: Optional[int] = None, 
+                          canny_thresh2: Optional[int] = None, 
+                          blur_size: Optional[int] = None) -> Tuple[List[np.ndarray], np.ndarray]:
     """
     Pre-processes an image to find distinct external contours.
 
@@ -26,11 +30,11 @@ def get_distinct_contours(image, canny_thresh1=None, canny_thresh2=None, blur_si
     contours, hierarchy = cv2.findContours(canny_output, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours, hierarchy
 
-def get_bottom_point(contour):
+def get_bottom_point(contour: np.ndarray) -> np.ndarray:
     """Finds the lowest point (max y-coordinate) in a contour."""
     return max(contour, key=lambda point: point[0][1])[0]
 
-def generate_depth_map(contours, labels, num_clusters, width, height):
+def generate_depth_map(contours: List[np.ndarray], labels: List[int], num_clusters: int, width: int, height: int) -> np.ndarray:
     """
     Generates a depth map by clustering contours and assigning depth based on vertical position.
     """

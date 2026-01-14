@@ -7,7 +7,7 @@ This file contains a list of potential improvements and features for the 2D to 3
 - [x] **Tests:** Add e2e or some kind of tests to compare or score the results.
 - [x] **Code documentation:** Improve readme with run instructions and details
 - [x] **Code modularization:** Split main.py into separate modules (clustering.py, depth_map.py, anaglyph.py, ui.py)
-- [ ] **Type hints:** Add proper type annotations throughout the codebase
+- [x] **Type hints:** Add proper type annotations throughout the codebase
 - [ ] **Error handling:** Add try-catch blocks for file operations and image processing
 - [x] **Configuration management:** Create a config file for default parameters
 - [ ] **Unit tests:** Test clustering algorithms and depth map generation functions

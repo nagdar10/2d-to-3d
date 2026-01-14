@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
+from typing import Optional
 from clustering import DbScan, KMeansClustering
 from depth_map import get_distinct_contours, generate_depth_map
 from anaglyph import generate_red_cyan
 import ui
 from config import cfg
 
-def main():
+def main() -> Optional[int]:
     """
     Main execution function.
     """

@@ -1,6 +1,7 @@
+import numpy as np
 from config import cfg
 
-def generate_red_cyan(image, depth_map):
+def generate_red_cyan(image: np.ndarray, depth_map: np.ndarray) -> np.ndarray:
     """
     Generates a red-cyan 3D anaglyph image from an image and its depth map.
 

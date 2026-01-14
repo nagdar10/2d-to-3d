@@ -2,23 +2,25 @@ import argparse
 import tkinter as tk
 from tkinter import filedialog
 import cv2
+import numpy as np
+from typing import List
 from config import cfg
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     """
     Parses command-line arguments.
     """
     defaults = cfg.get("clustering")
     
     parser = argparse.ArgumentParser(description="2D to 3D Image Converter")
-    parser.add_argument('--algo', choices=['dbscan', 'kmeans'], default=defaults['algorithm'], help='Clustering algorithm to use')
+    parser.add_argument('--algo', choices=['dbscan', 'kmeans'], default=defaults['algorithm'], help='Clustering algo to use')
     parser.add_argument('--k', type=int, default=defaults['kmeans_k'], help='Number of clusters for K-Means')
     parser.add_argument('--eps-factor', type=float, default=defaults['dbscan_eps_factor'], help='Epsilon factor for DBSCAN (proportion of image size)')
     parser.add_argument('--image_path', type=str, help='Path to the input image file')
     parser.add_argument('--test_mode', action='store_true', help='Run in test mode, disabling GUI elements')
     return parser.parse_args()
 
-def select_image_file():
+def select_image_file() -> str:
     """
     Opens a file dialog to select an image file.
     """
@@ -27,7 +29,7 @@ def select_image_file():
     image_path = filedialog.askopenfilename()
     return image_path
 
-def save_images(depth_map, red_cyan_image):
+def save_images(depth_map: np.ndarray, red_cyan_image: np.ndarray) -> None:
     """
     Opens file dialogs to save the depth map and anaglyph image.
     """
@@ -49,7 +51,7 @@ def save_images(depth_map, red_cyan_image):
         cv2.imwrite(file_path, red_cyan_image)
         print(f"Anaglyph image saved to {file_path}")
 
-def check_windows_open(window_names):
+def check_windows_open(window_names: List[str]) -> bool:
     """
     Checks if any of the specified windows are still open.
     Returns True if at least one window is open, False otherwise.

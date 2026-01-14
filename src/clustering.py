@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import cv2
+from typing import List, Tuple
 from config import cfg
 
 class DbScan:
@@ -8,7 +9,7 @@ class DbScan:
     A Python implementation of the DBSCAN clustering algorithm tailored for clustering
     bounding boxes (cv2.Rect). It groups rectangles that are close to each other.
     """
-    def __init__(self, data, eps, min_pts):
+    def __init__(self, data: List[Tuple[int, int, int, int]], eps: float, min_pts: int):
         """
         Initializes the DBSCAN algorithm.
 
@@ -22,12 +23,12 @@ class DbScan:
         self.data = data
         self.eps = eps
         self.min_pts = min_pts
-        self.labels = [-99] * len(data)  # -99: unvisited, -1: noise
+        self.labels: List[int] = [-99] * len(data)  # -99: unvisited, -1: noise
         self.cluster_id = -1
         # Memoization table for distances to avoid re-computation
-        self.dist_cache = np.full((len(data), len(data)), -1.0)
+        self.dist_cache: np.ndarray = np.full((len(data), len(data)), -1.0)
 
-    def run(self):
+    def run(self) -> List[int]:
         """
         Executes the DBSCAN clustering algorithm.
         """
@@ -41,7 +42,7 @@ class DbScan:
                     self.expand_cluster(i, neighbors)
         return self.labels
 
-    def expand_cluster(self, p_index, neighbors):
+    def expand_cluster(self, p_index: int, neighbors: List[int]):
         """
         Expands a cluster from a core point.
 
@@ -61,11 +62,11 @@ class DbScan:
                     neighbors.extend(n for n in new_neighbors if n not in neighbors)
             i += 1
 
-    def is_visited(self, index):
+    def is_visited(self, index: int) -> bool:
         """Checks if a point has been visited (i.e., assigned a cluster or noise)."""
         return self.labels[index] != -99
 
-    def region_query(self, p_index):
+    def region_query(self, p_index: int) -> List[int]:
         """
         Finds all points within the epsilon distance of a given point.
 
@@ -81,7 +82,7 @@ class DbScan:
                 neighbors.append(i)
         return neighbors
 
-    def distance_func(self, i, j):
+    def distance_func(self, i: int, j: int) -> float:
         """
         Calculates the minimum distance between the corners of two rectangles.
         Uses a cache to store and retrieve already computed distances.
@@ -124,7 +125,7 @@ class KMeansClustering:
     K-Means clustering implementation for bounding boxes.
     Clusters boxes based on their centroids.
     """
-    def __init__(self, data, k):
+    def __init__(self, data: List[Tuple[int, int, int, int]], k: int):
         """
         Initializes K-Means clustering.
 
@@ -134,10 +135,10 @@ class KMeansClustering:
         """
         self.data = data
         self.k = k
-        self.labels = []
+        self.labels: List[int] = []
         self.cluster_id = -1
 
-    def run(self):
+    def run(self) -> List[int]:
         """
         Executes K-Means clustering.
         """
