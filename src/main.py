@@ -71,7 +71,11 @@ def main() -> Optional[int]:
         print("No image selected.")
         return
 
-    im = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    try:
+        im = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    except Exception as e:
+        print(f"Error loading image '{image_path}': {e}")
+        return -1
 
     if im is None:
         print(f"Error: Could not open or find the image at {image_path}")
@@ -117,16 +121,23 @@ def main() -> Optional[int]:
 
     # Initial processing
     # print("Running initial processing...")
-    current_depth_map, current_red_cyan = perform_processing(
-        im, boxes, contours, current_params, width, height
-    )
+    try:
+        current_depth_map, current_red_cyan = perform_processing(
+            im, boxes, contours, current_params, width, height
+        )
+    except Exception as e:
+        print(f"Error during initial processing: {e}")
+        return -1
     
     # Save default output as requested by original logic
     depth_out = cfg.get("output", "default_depth_map_filename")
     anaglyph_out = cfg.get("output", "default_anaglyph_filename")
-    cv2.imwrite(depth_out, current_depth_map)
-    cv2.imwrite(anaglyph_out, current_red_cyan)
-    print(f"Initial output images '{depth_out}' and '{anaglyph_out}' have been saved.")
+    try:
+        cv2.imwrite(depth_out, current_depth_map)
+        cv2.imwrite(anaglyph_out, current_red_cyan)
+        print(f"Initial output images '{depth_out}' and '{anaglyph_out}' have been saved.")
+    except Exception as e:
+        print(f"Error saving initial output images: {e}")
 
     # 8. Display the results if not in test mode
     if not args.test_mode:

@@ -39,8 +39,11 @@ def save_images(depth_map: np.ndarray, red_cyan_image: np.ndarray) -> None:
         title="Save Depth Map As"
     )
     if file_path:
-        cv2.imwrite(file_path, depth_map)
-        print(f"Depth map saved to {file_path}")
+        try:
+            cv2.imwrite(file_path, depth_map)
+            print(f"Depth map saved to {file_path}")
+        except Exception as e:
+            print(f"Error saving depth map to {file_path}: {e}")
     
     file_path = filedialog.asksaveasfilename(
         defaultextension=".jpg",
@@ -48,8 +51,11 @@ def save_images(depth_map: np.ndarray, red_cyan_image: np.ndarray) -> None:
         title="Save Anaglyph Image As"
     )
     if file_path:
-        cv2.imwrite(file_path, red_cyan_image)
-        print(f"Anaglyph image saved to {file_path}")
+        try:
+            cv2.imwrite(file_path, red_cyan_image)
+            print(f"Anaglyph image saved to {file_path}")
+        except Exception as e:
+            print(f"Error saving anaglyph image to {file_path}: {e}")
 
 def check_windows_open(window_names: List[str]) -> bool:
     """
