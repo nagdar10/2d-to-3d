@@ -162,7 +162,26 @@ def main() -> Optional[int]:
             
             # If 's' is pressed, save the images
             if key == ord('s'):
-                ui.save_images(current_depth_map, current_red_cyan)
+                depth_path, anaglyph_path = ui.prompt_save_paths()
+                if depth_path and anaglyph_path:
+                    try:
+                        # Check if high bit-depth format is selected for depth map
+                        lowercase_path = depth_path.lower()
+                        if lowercase_path.endswith('.png') or lowercase_path.endswith('.tiff') or lowercase_path.endswith('.tif'):
+                            # Re-run clustering and generate 16-bit depth map
+                            labels, num_clusters = run_clustering(boxes, current_params, width, height)
+                            # Note: generate_depth_map needs to be imported with 16-bit support
+                            depth_map_to_save = generate_depth_map(contours, labels, num_clusters, width, height, dtype=np.uint16)
+                            print(f"Saving 16-bit depth map to {depth_path}...")
+                        else:
+                            depth_map_to_save = current_depth_map
+                            print(f"Saving 8-bit depth map to {depth_path}...")
+                        
+                        cv2.imwrite(depth_path, depth_map_to_save)
+                        cv2.imwrite(anaglyph_path, current_red_cyan)
+                        print(f"Anaglyph image saved to {anaglyph_path}")
+                    except Exception as e:
+                        print(f"Error saving images: {e}")
                 
             # Check if windows are still open
             if not ui.check_windows_open(window_names):

@@ -34,17 +34,34 @@ def get_bottom_point(contour: np.ndarray) -> np.ndarray:
     """Finds the lowest point (max y-coordinate) in a contour."""
     return max(contour, key=lambda point: point[0][1])[0]
 
-def generate_depth_map(contours: List[np.ndarray], labels: List[int], num_clusters: int, width: int, height: int) -> np.ndarray:
+def generate_depth_map(contours: List[np.ndarray], labels: List[int], num_clusters: int, width: int, height: int, dtype=np.uint8) -> np.ndarray:
     """
     Generates a depth map by clustering contours and assigning depth based on vertical position.
+    
+    Args:
+        dtype: Data type for the output image (np.uint8 or np.uint16).
     """
     # Create a background with a vertical linear gradient. This will serve as our depth map.
     # Objects at the top will be "further" (darker), and objects at the bottom
     # will be "closer" (brighter).
-    gradient_map = np.zeros((height, width), dtype=np.uint8)
+    
+    if dtype == np.uint16:
+        max_val = 65535
+        depth_map = np.zeros((height, width), dtype=np.uint16)
+    else:
+        max_val = 255
+        depth_map = np.zeros((height, width), dtype=np.uint8)
+    
+    gradient_map = np.zeros_like(depth_map)
     
     g_min = cfg.get("depth_map", "gradient_min")
     g_max = cfg.get("depth_map", "gradient_max")
+    
+    # Scale min/max if using 16-bit
+    if dtype == np.uint16:
+        g_min = int(g_min * 257) # 255 * 257 = 65535
+        g_max = int(g_max * 257)
+        
     g_diff = g_max - g_min
     
     for r in range(height):

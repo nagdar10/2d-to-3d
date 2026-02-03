@@ -29,33 +29,35 @@ def select_image_file() -> str:
     image_path = filedialog.askopenfilename()
     return image_path
 
-def save_images(depth_map: np.ndarray, red_cyan_image: np.ndarray) -> None:
+def prompt_save_paths() -> tuple[str, str]:
     """
-    Opens file dialogs to save the depth map and anaglyph image.
+    Opens file dialogs to select paths for saving the depth map and anaglyph image.
+    Returns:
+        tuple: (depth_map_path, anaglyph_path) - Empty string if cancelled.
     """
-    file_path = filedialog.asksaveasfilename(
+    filetypes = [
+        ("JPEG files", "*.jpg"), 
+        ("PNG files", "*.png"), 
+        ("TIFF files", "*.tiff;*.tif"),
+        ("All files", "*.*")
+    ]
+    
+    depth_path = filedialog.asksaveasfilename(
         defaultextension=".jpg",
-        filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+        filetypes=filetypes,
         title="Save Depth Map As"
     )
-    if file_path:
-        try:
-            cv2.imwrite(file_path, depth_map)
-            print(f"Depth map saved to {file_path}")
-        except Exception as e:
-            print(f"Error saving depth map to {file_path}: {e}")
     
-    file_path = filedialog.asksaveasfilename(
+    if not depth_path:
+        return "", ""
+        
+    anaglyph_path = filedialog.asksaveasfilename(
         defaultextension=".jpg",
-        filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+        filetypes=filetypes,
         title="Save Anaglyph Image As"
     )
-    if file_path:
-        try:
-            cv2.imwrite(file_path, red_cyan_image)
-            print(f"Anaglyph image saved to {file_path}")
-        except Exception as e:
-            print(f"Error saving anaglyph image to {file_path}: {e}")
+    
+    return depth_path, anaglyph_path
 
 def check_windows_open(window_names: List[str]) -> bool:
     """

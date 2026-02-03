@@ -19,7 +19,7 @@ This file contains a list of potential improvements and features for the 2D to 3
 - [ ] **3D Model Generation:** Use the generated depth map to create a 3D model, such as a point cloud or a mesh.
 - [ ] **3D Visualization:** Implement a 3D viewer to display the generated 3D model.
 - [x] **Save/Export:** Allow the user to save the generated depth map and/or the 3D model to a file.
-- [ ] **Multiple output formats:** Support PNG, TIFF for better quality and 16-bit depth maps
+- [x] **Multiple output formats:** Support PNG, TIFF for better quality and 16-bit depth maps
 - [ ] **3D format export:** Export to point cloud (PLY) or mesh (OBJ) formats
 - [ ] **Batch processing:** Handle multiple images at once
 
