@@ -37,5 +37,7 @@ class TestMain(unittest.TestCase):
         self.assertTrue(os.path.exists(self.depth_map_output), f"{self.depth_map_output} was not created.")
         self.assertTrue(os.path.exists(self.anaglyph_output), f"{self.anaglyph_output} was not created.")
 
+
+
 if __name__ == '__main__':
     unittest.main()

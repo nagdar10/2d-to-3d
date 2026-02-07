@@ -6,6 +6,7 @@ from depth_map import get_distinct_contours, generate_depth_map
 from anaglyph import generate_red_cyan
 import ui
 from config import cfg
+import preprocessing
 
 def run_clustering(boxes: List[Tuple[int, int, int, int]], 
                    params: Dict[str, Any], 
@@ -45,6 +46,36 @@ def perform_processing(im: np.ndarray,
     """
     Executes the full pipeline: clustering -> depth map -> anaglyph.
     """
+    # Preprocessing
+    if params.get('preprocessing_enabled', False):
+        # working_im = im.copy() # No need to copy if we reassigned, but safer to keep original im clean
+        
+        # Apply blur
+        method = params.get('blur_method', 'gaussian')
+        size = params.get('blur_kernel_size', 3)
+        processed_im = preprocessing.apply_blur(im, method, size)
+        
+        # Apply edge enhancement
+        if params.get('edge_enhancement', False):
+            processed_im = preprocessing.apply_edge_enhancement(processed_im)
+            
+        # Re-calculate contours based on preprocessed image
+        # Note: We need to update contours and boxes based on the new image state
+        # But wait, run_clustering takes boxes. boxes come from contours.
+        # So we should probably re-detect contours here if preprocessing is enabled?
+        # The current structure passes contours/boxes IN to this function, assuming they are static from main().
+        # If we preprocess, we change the image, so we might find different contours.
+        # IMPORTANT: The original design did initial contour detection ONCE in main().
+        # If preprocessing changes edges, we MUST re-detect contours to see the benefit.
+        contours, _ = get_distinct_contours(processed_im)
+        boxes = [cv2.boundingRect(c) for c in contours]
+    else:
+        # If no preprocessing, use the passed-in contours/boxes (or re-detect on original check?)
+        # For consistency if we change params, we might want to ensure we are using the original.
+        # But the arguments 'boxes' and 'contours' are passed in. 
+        # If we don't preprocess, we usually trust the ones passed in (which correspond to 'im').
+        pass
+
     labels, num_clusters = run_clustering(boxes, params, width, height)
     
     # Generate Depth Map
@@ -94,7 +125,11 @@ def main() -> Optional[int]:
         'algo': args.algo,
         'k': args.k,
         'eps_factor': args.eps_factor,
-        'min_pts': cfg.get("clustering", "dbscan_min_pts")
+        'min_pts': cfg.get("clustering", "dbscan_min_pts"),
+        'preprocessing_enabled': cfg.get("preprocessing", "enabled"),
+        'blur_method': cfg.get("preprocessing", "blur_method"),
+        'blur_kernel_size': cfg.get("preprocessing", "blur_kernel_size"),
+        'edge_enhancement': cfg.get("preprocessing", "edge_enhancement")
     }
     
     # Store images to save later

@@ -100,6 +100,22 @@ class ParameterTuner:
         k = self.params.get('k', 3)
         cv2.createTrackbar('K-Means K', window_name, k, 20, self._on_k_change)
 
+        # Preprocessing params
+        prep_enabled = int(self.params.get('preprocessing_enabled', False))
+        cv2.createTrackbar('Enable Preproc', window_name, prep_enabled, 1, self._on_prep_enable_change)
+        
+        # Blur method: 0=Gaussian, 1=Median
+        blur_method = 0 if self.params.get('blur_method', 'gaussian') == 'gaussian' else 1
+        cv2.createTrackbar('Blur Method (0:G, 1:M)', window_name, blur_method, 1, self._on_blur_method_change)
+
+        # Blur size: 1-15
+        blur_size = self.params.get('blur_kernel_size', 3)
+        cv2.createTrackbar('Blur Size', window_name, blur_size, 15, self._on_blur_size_change)
+
+        # Edge enhancement
+        edge_enhance = int(self.params.get('edge_enhancement', False))
+        cv2.createTrackbar('Edge Enhance', window_name, edge_enhance, 1, self._on_edge_enhance_change)
+
     def _on_algo_change(self, val):
         self.params['algo'] = self.algo_map.get(val, 'dbscan')
         self.callback(self.params)
@@ -117,6 +133,25 @@ class ParameterTuner:
     def _on_k_change(self, val):
         if val < 1: val = 1
         self.params['k'] = val
+        self.callback(self.params)
+
+    # Preprocessing controls
+    def _on_prep_enable_change(self, val):
+        self.params['preprocessing_enabled'] = bool(val)
+        self.callback(self.params)
+
+    def _on_blur_method_change(self, val):
+        self.params['blur_method'] = 'gaussian' if val == 0 else 'median'
+        self.callback(self.params)
+
+    def _on_blur_size_change(self, val):
+        # Ensure odd number
+        if val % 2 == 0: val += 1
+        self.params['blur_kernel_size'] = val
+        self.callback(self.params)
+
+    def _on_edge_enhance_change(self, val):
+        self.params['edge_enhancement'] = bool(val)
         self.callback(self.params)
 
 def create_tuning_controls(window_name: str, initial_params: dict, on_change_callback) -> ParameterTuner:

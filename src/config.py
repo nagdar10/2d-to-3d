@@ -18,6 +18,12 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "canny_thresh2": 200,
         "blur_size": 3
     },
+    "preprocessing": {
+        "enabled": False,
+        "blur_method": "gaussian",
+        "blur_kernel_size": 3,
+        "edge_enhancement": False
+    },
     "depth_map": {
         "gradient_min": 32,
         "gradient_max": 223

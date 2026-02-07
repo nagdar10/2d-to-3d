@@ -35,7 +35,7 @@ This file contains a list of potential improvements and features for the 2D to 3
 ## Algorithm Improvements
 
 - [x] **Alternative Clustering Algorithms:** Implemented K-Means clustering. (Original: Explore other clustering algorithms (e.g., K-Means, Mean Shift) to see if they produce better results.)
-- [ ] **Image Preprocessing:** Add more advanced image preprocessing steps to improve the quality of the depth map (e.g., noise reduction, edge detection).
+- [x] **Image Preprocessing:** Add more advanced image preprocessing steps to improve the quality of the depth map (e.g., noise reduction, edge detection).
 - [ ] **Refine Depth Map Generation:** Improve the logic for assigning depth values to clusters to create a more realistic depth map.
 
 ## Documentation
